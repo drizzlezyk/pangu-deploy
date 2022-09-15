@@ -1,1 +1,1 @@
-# pangu-deploy
+# pangu_inference
