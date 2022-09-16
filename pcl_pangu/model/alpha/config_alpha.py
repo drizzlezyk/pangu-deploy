@@ -163,10 +163,19 @@ class model_config_npu():
                  finetune=False,
                  mindir_path='',
                  device_target='Ascend',
-                 input='',
+                 inputs='',
                  output_file='',
                  oneCardInference=True,
-                 distribute=True
+                 distribute=True,
+                 use_past='true',
+                 export=1,
+                 op_level_model_parallel_num=1,
+                 seq_length=1024,
+                 num_layers=64,
+                 stage_num=1,
+                 micro_size=1,
+                 hidden_size=2560,
+                 param_init_type="fp32"
                  ):
         self.model = model
         self.model_parallel_size = model_parallel_size
@@ -187,10 +196,26 @@ class model_config_npu():
         self.strategy_load_ckpt_path = strategy_load_ckpt_path
         self.mindir_path = mindir_path
         self.device_target = device_target
-        self.input = input
+        self.input = inputs
         self.output_file = output_file
         self.oneCardInference = oneCardInference
         self.distribute = distribute
+        self.use_past = use_past
+        self.export = export
+        self.op_level_model_parallel_num = op_level_model_parallel_num
+        self.seq_length = seq_length
+        self.num_layers = num_layers
+        self.stage_num = stage_num
+        self.micro_size = micro_size
+        self.hidden_size = hidden_size
+        self.param_init_type = param_init_type
+        if self.model == "2B6":
+            self.num_layers = 31
+            self.hidden_size = 2560
+            self.num_attention_heads = 32
+            self.seq_length = 1024
+            self.max_position_embeddings = 1024
+            self.model_parallel_size = 2
         if self.finetune:
             assert self.load_ckpt_local_path is not None, "> Please set your pretrained [model.ckpt] path!"
             # assert self.strategy_load_ckpt_path is not None, "> Please set your pretrained model [strategy.ckpt] path!"
