@@ -54,7 +54,7 @@ def fine_tune(config):
         run_ms_train(config_dict)
 
 
-def inference(config, top_k=1, top_p=0.9, input=None, input_file=None,
+def inference(config, model, config_load, top_k=1, top_p=0.9, input=None, input_file=None,
               generate_max_tokens=128, output_file=None, oneCardInference=True, mindir_path=''):
     assert generate_max_tokens > 0 and generate_max_tokens <= 800, "> generate_max_tokens always in (0, 800]"
     print('--------------------------- inference config --------------------------')
@@ -94,7 +94,7 @@ def inference(config, top_k=1, top_p=0.9, input=None, input_file=None,
         # config_dict['mindir_path'] = mindir_path
         # print(config_dict.keys())
 
-        result = run_ms_inference(config)
+        result = run_ms_inference(config, model, config_load)
         return result
 
 def run_pt(script_args, py_script, **kwargs):
@@ -117,10 +117,16 @@ def run_ms_train(config_dict):
     main(new_opt)
 
 
-def run_ms_inference(config_dict):
+def run_ms_inference(config_dict, model, config):
     # current_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
     # sys.path.append(current_dir + '/panguAlpha_mindspore')
-    from pcl_pangu.model.panguAlpha_mindspore.inference_alpha_ms13 import load_inference
+    from pcl_pangu.model.panguAlpha_mindspore.inference_alpha_ms13 import inference
     # print(config_dict.keys())
-    return load_inference(config_dict)
+    return inference(config_dict, model, config)
+
+
+def get_model(config_dict):
+    from pcl_pangu.model.panguAlpha_mindspore.inference_alpha_ms13 import load_model
+    return load_model(config_dict)
+
 

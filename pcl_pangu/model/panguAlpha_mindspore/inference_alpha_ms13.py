@@ -145,7 +145,7 @@ def load_model(args_opt):
     # Compile network and obtain tensor layout for loading ckpt
     inputs_np = Tensor(np.ones(shape=(config.batch_size, config.seq_length)), mstype.int32)
     current_index = Tensor(np.array([0]), mstype.int32)
-
+    context.set_auto_parallel_context(parallel_mode=ParallelMode.AUTO_PARALLEL, full_batch=True)
     if local_strategy_ckpt_path is None:
         predict_layout = None
     elif config.use_past:
@@ -211,42 +211,42 @@ def export_mindir(model_predict, config, opt):
     print("Export finished and now exit.")
 
 import mindspore.nn as nn
-def load_mindir(args_opt):
-    batch_size = 1
-    model_parallel_num = args_opt.op_level_model_parallel_num
-    device_num = 1
-
-    data_parallel_num = int(device_num / model_parallel_num)
-    if len(os.listdir(args_opt.load_ckpt_local_path)) <= 1:
-        local_npy_path = None
-    else:
-        local_npy_path = args_opt.load_ckpt_local_path
-        print(local_npy_path)
-    use_past = False
-    config = PANGUALPHAConfig(
-        data_parallel_num=data_parallel_num,
-        model_parallel_num=model_parallel_num,
-        batch_size=batch_size,
-        seq_length=args_opt.seq_length,
-        vocab_size=args_opt.vocab_size,
-        embedding_size=args_opt.hidden_size,
-        num_layers=args_opt.num_layers,
-        num_heads=args_opt.num_attention_heads,
-        expand_ratio=4,
-        post_layernorm_residual=False,
-        dropout_rate=0.0,
-        compute_dtype=mstype.float16,
-        use_past=use_past,
-        stage_num=args_opt.stage_num,
-        micro_size=args_opt.micro_size,
-        eod_reset=False,
-        word_emb_dp=True,
-        load_ckpt_path=local_npy_path,
-        param_init_type=mstype.float32 if args_opt.param_init_type == 'fp32' else mstype.float16)
-
-    net = nn.GraphCell(opt.mindir_path)
-    model = net(input)
-    return model
+# def load_mindir(args_opt):
+#     batch_size = 1
+#     model_parallel_num = args_opt.op_level_model_parallel_num
+#     device_num = 1
+#
+#     data_parallel_num = int(device_num / model_parallel_num)
+#     if len(os.listdir(args_opt.load_ckpt_local_path)) <= 1:
+#         local_npy_path = None
+#     else:
+#         local_npy_path = args_opt.load_ckpt_local_path
+#         print(local_npy_path)
+#     use_past = False
+#     config = PANGUALPHAConfig(
+#         data_parallel_num=data_parallel_num,
+#         model_parallel_num=model_parallel_num,
+#         batch_size=batch_size,
+#         seq_length=args_opt.seq_length,
+#         vocab_size=args_opt.vocab_size,
+#         embedding_size=args_opt.hidden_size,
+#         num_layers=args_opt.num_layers,
+#         num_heads=args_opt.num_attention_heads,
+#         expand_ratio=4,
+#         post_layernorm_residual=False,
+#         dropout_rate=0.0,
+#         compute_dtype=mstype.float16,
+#         use_past=use_past,
+#         stage_num=args_opt.stage_num,
+#         micro_size=args_opt.micro_size,
+#         eod_reset=False,
+#         word_emb_dp=True,
+#         load_ckpt_path=local_npy_path,
+#         param_init_type=mstype.float32 if args_opt.param_init_type == 'fp32' else mstype.float16)
+#
+#     net = nn.GraphCell(opt.mindir_path)
+#     model = net(input)
+#     return model
 
 
 def run_predict(model_predict, config, args_opt):
@@ -286,6 +286,7 @@ def run_predict(model_predict, config, args_opt):
         out_f = None
 
     # Tokenize input sentence to ids
+    result_list = []
     for input_sentence in samples:
         print('> Input is:\n', input_sentence, flush=True)
         tokenized_token = tokenizer.tokenize(input_sentence)
@@ -297,10 +298,12 @@ def run_predict(model_predict, config, args_opt):
         # Decode output ids to sentence
         output_samples = tokenizer.convert_ids_to_tokens(output_ids.tolist())
         print('> Output is:\n', output_samples, flush=True)
+        result_list.append(output_samples)
         if not out_f is None:
             out_f.write('> Output is:\n{}'.format(output_samples))
     if not out_f is None:
         out_f.close()
+    return result_list
 
 
 def run_predict_mpg(model_predict, config, args_opt):
@@ -356,13 +359,21 @@ def run_predict_mpg(model_predict, config, args_opt):
         out_f.close()
 
 
+def inference(opt, model_predict, config):
+    if opt.src_language == "":
+        result = run_predict(model_predict, config, opt)
+    else:
+        result = run_predict_mpg(model_predict, config, opt)
+    return result
+
+
 def load_inference(opt):
     """Main process for predict or export model"""
 
     model_predict, config = load_model(opt)
     # model_predict, config = load_mindir(opt)
     print('start export')
-    export_mindir(model_predict, config, opt)
+    # export_mindir(model_predict, config, opt)
     if opt.src_language == "":
         result = run_predict(model_predict, config, opt)
     else:

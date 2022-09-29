@@ -1,0 +1,33 @@
+{
+  "model_algorithm": "pangu",
+  "model_type": "MindSpore",
+  "apis":  [
+    {
+      "protocol": "https",
+      "url": "/",
+      "method": "post",
+      "request": {
+        "Content-type": "application/json",
+        "data": {
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "response": {
+        "Content-type": "application/json",
+        "data": {
+          "type": "object",
+          "properties": {
+            "result": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -167,15 +167,16 @@ class model_config_npu():
                  output_file='',
                  oneCardInference=True,
                  distribute=True,
-                 use_past='true',
-                 export=1,
+                 use_past='false',
+                 export=0,
                  op_level_model_parallel_num=1,
                  seq_length=1024,
                  num_layers=64,
                  stage_num=1,
                  micro_size=1,
                  hidden_size=2560,
-                 param_init_type="fp32"
+                 param_init_type="fp32",
+                 load_ckpt_name="PanGu_Alpha.ckpt"
                  ):
         self.model = model
         self.model_parallel_size = model_parallel_size
@@ -209,6 +210,7 @@ class model_config_npu():
         self.micro_size = micro_size
         self.hidden_size = hidden_size
         self.param_init_type = param_init_type
+        self.load_ckpt_name = load_ckpt_name
         if self.model == "2B6":
             self.num_layers = 31
             self.hidden_size = 2560
