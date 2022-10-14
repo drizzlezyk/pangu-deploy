@@ -1,14 +1,12 @@
-# 拉取基础镜像，本镜像由华为云官方提供，公开可信
 FROM swr.cn-north-4.myhuaweicloud.com/modelarts-job-dev-image/mindspore-ascend910-cp37-euleros2.8-aarch64-training:1.3.0-3.3.0-roma
-MAINTAINER ***
-WORKDIR /home/work
 
 # 安装自定义版本Ascend Tookkit，这里使用的是5.0.4版本
 USER root
-COPY Ascend-cann-toolkit_5.0.4_linux-aarch64.run /home/work/Ascend-cann-toolkit_5.0.4_linux-aarch64.run
+COPY Ascend-cann-toolkit_5.1.RC1_linux-aarch64.run /home/work/Ascend-cann-toolkit_5.1.RC1_linux-aarch64.run
 RUN /usr/local/Ascend/nnae/latest/script/uninstall.sh
-RUN /home/work/Ascend-cann-toolkit_5.0.4_linux-aarch64.run --full
-RUN rm -rf /home/work/Ascend-cann-toolkit_5.0.4_linux-aarch64.run
+RUN chmod a+x /home/work/Ascend-cann-toolkit_5.1.RC1_linux-aarch64.run
+RUN /home/work/Ascend-cann-toolkit_5.1.RC1_linux-aarch64.run --full
+RUN rm -rf Ascend-cann-toolkit_5.1.RC1_linux-aarch64.run
 
 # 设置环境变量
 ENV LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Ascend/ascend-toolkit/latest/compiler/lib64/plugin/opskernel:/usr/local/Ascend/ascend-toolkit/latest/compiler/lib64/plugin/nnengine:$LD_LIBRARY_PATH \
@@ -19,22 +17,18 @@ ENV LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Asc
     TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit \
     ASCEND_AUTOML_PATH=/usr/local/Ascend/ascend-toolkit/latest/tools
 
-
-# RUN apt install -y libgmp-dev
-# RUN sudo apt-get install m4
-COPY gmp-6.1.2.tar.xz /home/work/gmp-6.1.2.tar.xz
-RUN cd /home/work/
-RUN tar -jvxf gmp-6.1.2.tar.xz
-RUN ./gmp-6.1.2/configure --enable-cxx --prefix=/path_to_install --build=x86_64-linux
-RUN make
-RUN make check
-RUN sudo make install
+RUN apt install -y libgmp-dev
 
 # 安装Mindspore
-RUN pip install /usr/local/Ascend/ascend-toolkit/latest/fwkacllib/lib64/topi-0.4.0-py3-none-any.whl
-RUN pip install /usr/local/Ascend/ascend-toolkit/latest/fwkacllib/lib64/te-0.4.0-py3-none-any.whl
-RUN pip install /usr/local/Ascend/ascend-toolkit/latest/fwkacllib/lib64/hccl-0.1.0-py3-none-any.whl
-RUN pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/1.3.0/MindSpore/ascend/aarch64/mindspore_ascend-1.3.0-cp37-cp37m-linux_aarch64.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+USER work
+RUN pip install /usr/local/Ascend/ascend-toolkit/latest/fwkacllib/lib64/topi-0.4.0-py3-none-any.whl \
+                /usr/local/Ascend/ascend-toolkit/latest/fwkacllib/lib64/te-0.4.0-py3-none-any.whl \
+                /usr/local/Ascend/ascend-toolkit/latest/fwkacllib/lib64/hccl-0.1.0-py3-none-any.whl \
+                https://ms-release.obs.cn-north-4.myhuaweicloud.com/1.7.0/MindSpore/ascend/aarch64/mindspore_ascend-1.7.0-cp37-cp37m-linux_aarch64.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+
+# 安装Flask
+RUN pip install Flask -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 RUN python -c "import mindspore;mindspore.run_check()"
 
@@ -54,4 +48,4 @@ RUN pip uninstall requests -y
 COPY --chown=work:work model /home/model
 
 # 制定启动命令
-CMD python3 /home/model/service.py
+CMD python3 /home/model/service_modelarts.py --tokenizer_path ./tokenizer/vocab  --load_ckpt_local_path ./checkpoint_file/ --strategy_load_ckpt_path ./strategy/pangu_alpha_2.6B_ckpt_strategy.ckpt

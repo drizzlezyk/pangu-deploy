@@ -187,9 +187,9 @@ def load_model(args_opt):
         print("================load param ok=================", flush=True)
 
     # -------save ckpt------------------------------------
-    from mindspore import save_checkpoint
-    save_checkpoint_path = os.path.join(args_opt.save_checkpoint_path, 'pangu-2B6.ckpt')
-    save_checkpoint(eval_net, save_checkpoint_path)
+    # from mindspore import save_checkpoint
+    # save_checkpoint_path = os.path.join(args_opt.save_checkpoint_path, 'pangu-2B6.ckpt')
+    # save_checkpoint(eval_net, save_checkpoint_path)
 
     ##-------------------------------------------------------------------------------------------------------
     return model_predict, config
@@ -215,8 +215,8 @@ def export_mindir(model_predict, config):
 
 def run_predict(model_predict, config, args_opt):
     """run predict"""
-    from src.tokenization_jieba import JIEBATokenizer
-    from src.generate import generate, generate_increment
+    from pcl_pangu.model.panguAlpha_mindspore.src.tokenization_jieba import JIEBATokenizer
+    from pcl_pangu.model.panguAlpha_mindspore.src.generate import generate, generate_increment
     # Define tokenizer
     args_opt.end_token = 9
     tokenizer = JIEBATokenizer(args_opt.tokenizer_path + '.vocab',
@@ -269,7 +269,7 @@ def run_predict(model_predict, config, args_opt):
 def run_predict_mpg(model_predict, config, args_opt):
     """run predict"""
     # from src.tokenization_jieba import JIEBATokenizer
-    from src.generate import generate, generate_increment
+    from pcl_pangu.model.panguAlpha_mindspore.src.generate import generate, generate_increment
     from pcl_pangu.tokenizer.spm_13w.tokenizer import SpmTokenizer, langs_ID, translate_ID
     tokenizer = SpmTokenizer(args_opt.tokenizer_path)
 
