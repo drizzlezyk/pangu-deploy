@@ -1,4 +1,5 @@
 from pcl_pangu.model import alpha
+from pcl_pangu.context import set_context
 from pcl_pangu.model.launcher_torch import launch
 from loguru import logger
 import os, sys
@@ -40,7 +41,7 @@ def split_pt(config, merged_path, num_ranks):
 if __name__ == '__main__':
     from pcl_pangu.model_converter import split_pt
     merged_path = '/home/yands/tmp/numpy_ckpt_2.6b/merged'
-    split_pt(alpha.model_config_gpu(model='2B6'), merged_path, 2)
+    split_pt(alpha.model_config_gpu(model='2B6'),merged_path,2)
 
 
     pass

@@ -7,7 +7,7 @@ def _confirm_id_token():
     pass
 
 def set_context(backend='pytorch',id=0,token=0):
-    assert backend in ['pytorch', 'mindspore']
+    assert backend in ['pytorch', 'mindspore','cpu']
     global _CONTEXT
     _CONTEXT.backend = backend
     _CONTEXT.id = id

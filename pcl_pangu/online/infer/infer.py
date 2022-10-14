@@ -23,13 +23,11 @@ def ErrorMessageConverter(result_response):
 
 class Infer(object):
 
-    pangu_evolution_url = "https://pangu-alpha.openi.org.cn/query_advanced?"
-
     def __init__(self):
         pass
 
     @classmethod
-    def do_generate_pangu_alpha(cls, model, prompt_input, max_token=None, top_k=None, top_p=None, api_key=None, **kwargs):
+    def do_generate_pangu_alpha(cls, model, prompt_input, api_key=None, max_token=None, top_k=None, top_p=None, **kwargs):
         payload = {
             'api_key': api_key,
             'u': prompt_input,
@@ -48,34 +46,16 @@ class Infer(object):
         return ErrorMessageConverter(result_response)
 
     @classmethod
-    def do_generate_pangu_evolution(cls, model, prompt_input, max_token=None, top_k=None, top_p=None, api_key=None, **kwargs):
+    def do_generate_pangu_evolution(cls, model, prompt_input, api_key=None, max_token=None, top_k=None, top_p=None, **kwargs):
 
-        request = PanguEvolutionDTO.build_request(api_key, prompt_input, max_token, top_p, top_k)
+        request = PanguEvolutionDTO.build_request(model, api_key, prompt_input, max_token, top_k, top_p)
         default_response = PanguEvolutionDTO.build_default_response(api_key, model, prompt_input)
-
-        try:
-            response = requests.get(cls.pangu_evolution_url, params=request, headers={'Connection': 'close'})
-            if response.status_code == 200:
-                result = response.json()["rsvp"]
-                openi_access_flag = response.json()["openi_access_flag"]
-                if result and openi_access_flag:
-                    default_response["results"]["generate_text"] = result[-1]
-                    default_response["status"] = True
-                    return ErrorMessageConverter(default_response)
-                elif openi_access_flag is False:
-                    default_response["results"]["generate_text"] = None
-                    default_response["status"] = False
-                    default_response["api_access_status"] = False
-
-        except:
-            time.sleep(10)
-            print("Connection refused by the server!")
-
-        print("Error response!")
-        return ErrorMessageConverter(default_response)
+        # response = ErrorMessageConverter(PanguEvolutionDTO.do_remote_infer_v1(request, default_response))
+        response = PanguEvolutionDTO.do_remote_infer_v2(request, default_response)
+        return response
 
     @classmethod
-    def generate(cls, model, prompt_input, max_token=None, top_k=None, top_p=None, api_key=None, **kwargs):
+    def generate(cls, model, prompt_input, api_key, max_token=None, top_k=None, top_p=None, **kwargs):
         """
         model: 模型
         prompt_input: 文本输入，可以结合prompt做为整体输入
@@ -85,10 +65,10 @@ class Infer(object):
         kwargs: 不同模型支持的其他参数
         """
         if "pangu-alpha-13B-md"==model:
-            return cls.do_generate_pangu_alpha(model, prompt_input, max_token, top_k, top_p, api_key, **kwargs)
+            return cls.do_generate_pangu_alpha(model, prompt_input, api_key, max_token, top_k, top_p, **kwargs)
 
         elif "pangu-alpha-evolution-2B6-pt"==model:
-            return cls.do_generate_pangu_evolution(model, prompt_input, max_token, top_k, top_p, api_key, **kwargs)
+            return cls.do_generate_pangu_evolution(model, prompt_input, api_key, max_token, top_k, top_p, **kwargs)
 
         else:
             defalut_response = {"status": "The model does not exist."}

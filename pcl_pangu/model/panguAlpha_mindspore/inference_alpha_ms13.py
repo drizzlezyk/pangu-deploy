@@ -31,7 +31,7 @@ from mindspore.train.serialization import load_checkpoint, load_param_into_net, 
 # from src.serialization import load_distributed_checkpoint
 from pcl_pangu.model.panguAlpha_mindspore.src.pangu_alpha import PanguAlpha, EvalNet
 from pcl_pangu.model.panguAlpha_mindspore.src.pangu_alpha_config import PANGUALPHAConfig, set_parse
-# from pcl_pangu.model.panguAlpha_mindspore.src.utils_pangu import get_args
+from pcl_pangu.model.panguAlpha_mindspore.src.utils_pangu import get_args
 
 import time
 from pcl_pangu.model.panguAlpha_mindspore.src.utils_pangu import get_openi_tar, ckpt_tar_openi, get_ckpt_file_list
@@ -44,7 +44,6 @@ def load_model(args_opt):
      The main function for load model
     """
     # Set execution mode
-    # print(args_opt.keys())
     context.set_context(save_graphs=False,
                         mode=context.GRAPH_MODE,
                         device_target=args_opt.device_target)
@@ -109,16 +108,15 @@ def load_model(args_opt):
         local_npy_path = None
     else:
         local_npy_path = args_opt.load_ckpt_local_path
-        print(local_npy_path)
     config = PANGUALPHAConfig(
         data_parallel_num=data_parallel_num,
         model_parallel_num=model_parallel_num,
         batch_size=batch_size,
         seq_length=args_opt.seq_length,
         vocab_size=args_opt.vocab_size,
-        embedding_size=args_opt.hidden_size,
+        embedding_size=args_opt.embedding_size,
         num_layers=args_opt.num_layers,
-        num_heads=args_opt.num_attention_heads,
+        num_heads=args_opt.num_heads,
         expand_ratio=4,
         post_layernorm_residual=False,
         dropout_rate=0.0,
@@ -145,7 +143,7 @@ def load_model(args_opt):
     # Compile network and obtain tensor layout for loading ckpt
     inputs_np = Tensor(np.ones(shape=(config.batch_size, config.seq_length)), mstype.int32)
     current_index = Tensor(np.array([0]), mstype.int32)
-    context.set_auto_parallel_context(parallel_mode=ParallelMode.AUTO_PARALLEL, full_batch=True)
+
     if local_strategy_ckpt_path is None:
         predict_layout = None
     elif config.use_past:
@@ -179,7 +177,6 @@ def load_model(args_opt):
         else:
             raise ImportError('> Only Support 2B6 / 13B inference')
         print(f"Loading from path {ckpt_file_list[0]}", flush=True)
-        print("==========predict layout===========", predict_layout)
         load_distributed_checkpoint(eval_net, ckpt_file_list, predict_strategy=predict_layout)
         print("================load param ok=================", flush=True)
     else:
@@ -189,11 +186,16 @@ def load_model(args_opt):
         load_param_into_net(eval_net, parameters)
         print("================load param ok=================", flush=True)
 
+    # -------save ckpt------------------------------------
+    from mindspore import save_checkpoint
+    save_checkpoint_path = os.path.join(args_opt.save_checkpoint_path, 'pangu-2B6.ckpt')
+    save_checkpoint(eval_net, save_checkpoint_path)
+
     ##-------------------------------------------------------------------------------------------------------
     return model_predict, config
 
 
-def export_mindir(model_predict, config, opt):
+def export_mindir(model_predict, config):
     """Export mindir model"""
     inputs_np = Tensor(np.ones(shape=(config.batch_size, config.seq_length)), mstype.int32)
     current_index = Tensor(np.array([0]), mstype.int32)
@@ -201,70 +203,29 @@ def export_mindir(model_predict, config, opt):
     batch_valid_length = Tensor(np.array([0]), mstype.int32)
     init_true = Tensor([True], mstype.bool_)
     inputs_np_1 = Tensor(np.ones(shape=(config.batch_size, 1)), mstype.int32)
-    mindir_path = opt.mindir_path
+
     model_predict.predict_network.add_flags_recursive(is_first_iteration=True)
     export(model_predict.predict_network, inputs_np, current_index,
-           init_true, batch_valid_length, file_name=os.path.join(mindir_path, 'pangu_alpha_1024'), file_format='MINDIR')
+           init_true, batch_valid_length, file_name='pangu_alpha_1024', file_format='MINDIR')
     model_predict.predict_network.add_flags_recursive(is_first_iteration=False)
     export(model_predict.predict_network, inputs_np_1, current_index,
-           init_true, batch_valid_length, file_name=os.path.join(mindir_path, 'pangu_alpha_1'), file_format='MINDIR')
+           init_true, batch_valid_length, file_name='pangu_alpha_1', file_format='MINDIR')
     print("Export finished and now exit.")
-
-import mindspore.nn as nn
-# def load_mindir(args_opt):
-#     batch_size = 1
-#     model_parallel_num = args_opt.op_level_model_parallel_num
-#     device_num = 1
-#
-#     data_parallel_num = int(device_num / model_parallel_num)
-#     if len(os.listdir(args_opt.load_ckpt_local_path)) <= 1:
-#         local_npy_path = None
-#     else:
-#         local_npy_path = args_opt.load_ckpt_local_path
-#         print(local_npy_path)
-#     use_past = False
-#     config = PANGUALPHAConfig(
-#         data_parallel_num=data_parallel_num,
-#         model_parallel_num=model_parallel_num,
-#         batch_size=batch_size,
-#         seq_length=args_opt.seq_length,
-#         vocab_size=args_opt.vocab_size,
-#         embedding_size=args_opt.hidden_size,
-#         num_layers=args_opt.num_layers,
-#         num_heads=args_opt.num_attention_heads,
-#         expand_ratio=4,
-#         post_layernorm_residual=False,
-#         dropout_rate=0.0,
-#         compute_dtype=mstype.float16,
-#         use_past=use_past,
-#         stage_num=args_opt.stage_num,
-#         micro_size=args_opt.micro_size,
-#         eod_reset=False,
-#         word_emb_dp=True,
-#         load_ckpt_path=local_npy_path,
-#         param_init_type=mstype.float32 if args_opt.param_init_type == 'fp32' else mstype.float16)
-#
-#     net = nn.GraphCell(opt.mindir_path)
-#     model = net(input)
-#     return model
 
 
 def run_predict(model_predict, config, args_opt):
     """run predict"""
-    from pcl_pangu.model.panguAlpha_mindspore.src.tokenization_jieba import JIEBATokenizer
-    from pcl_pangu.model.panguAlpha_mindspore.src.generate import generate, generate_increment
+    from src.tokenization_jieba import JIEBATokenizer
+    from src.generate import generate, generate_increment
     # Define tokenizer
     args_opt.end_token = 9
-    print('=========Load Tokenizer============')
-    tokenizer = JIEBATokenizer(args_opt.tokenizer_path + 'vocab.vocab',
-                               args_opt.tokenizer_path + 'vocab.model')
+    tokenizer = JIEBATokenizer(args_opt.tokenizer_path + '.vocab',
+                               args_opt.tokenizer_path + '.model')
 
     samples = args_opt.input
-    print('======input=======', samples)
     input_file = args_opt.input_file
     output_file = args_opt.output_file
-    output_file = os.path.join(output_file, 'result.txt')
-    print('=====output file=====', output_file)
+
     if isinstance(samples, str):
         samples = [samples]
     elif isinstance(samples, list):
@@ -286,7 +247,6 @@ def run_predict(model_predict, config, args_opt):
         out_f = None
 
     # Tokenize input sentence to ids
-    result_list = []
     for input_sentence in samples:
         print('> Input is:\n', input_sentence, flush=True)
         tokenized_token = tokenizer.tokenize(input_sentence)
@@ -298,18 +258,18 @@ def run_predict(model_predict, config, args_opt):
         # Decode output ids to sentence
         output_samples = tokenizer.convert_ids_to_tokens(output_ids.tolist())
         print('> Output is:\n', output_samples, flush=True)
-        result_list.append(output_samples)
         if not out_f is None:
             out_f.write('> Output is:\n{}'.format(output_samples))
     if not out_f is None:
         out_f.close()
-    return result_list
+
+    return output_samples
 
 
 def run_predict_mpg(model_predict, config, args_opt):
     """run predict"""
     # from src.tokenization_jieba import JIEBATokenizer
-    from pcl_pangu.model.panguAlpha_mindspore.src.generate import generate, generate_increment
+    from src.generate import generate, generate_increment
     from pcl_pangu.tokenizer.spm_13w.tokenizer import SpmTokenizer, langs_ID, translate_ID
     tokenizer = SpmTokenizer(args_opt.tokenizer_path)
 
@@ -359,27 +319,21 @@ def run_predict_mpg(model_predict, config, args_opt):
         out_f.close()
 
 
-def inference(opt, model_predict, config):
-    if opt.src_language == "":
-        result = run_predict(model_predict, config, opt)
-    else:
-        result = run_predict_mpg(model_predict, config, opt)
-    return result
+def main_with_model(opt, model, config):
+    run_predict(model, config, opt)
 
 
-def load_inference(opt):
+def main(opt):
     """Main process for predict or export model"""
 
     model_predict, config = load_model(opt)
-    # model_predict, config = load_mindir(opt)
-    print('start export')
-    # export_mindir(model_predict, config, opt)
-    if opt.src_language == "":
-        result = run_predict(model_predict, config, opt)
+    if opt.export:
+        export_mindir(model_predict, config)
     else:
-        result = run_predict_mpg(model_predict, config, opt)
-    return result
-
+        if opt.src_language == "":
+            run_predict(model_predict, config, opt)
+        else:
+            run_predict_mpg(model_predict, config, opt)
 
 def setup_args(args_opt, model_config_dict):
     args_opt.op_level_model_parallel_num = model_config_dict.get('model_parallel_size')
@@ -391,22 +345,21 @@ def setup_args(args_opt, model_config_dict):
     args_opt.num_heads = model_config_dict.get('num_attention_heads')
     args_opt.start_lr = model_config_dict.get('start_lr')
     args_opt.end_lr = model_config_dict.get('end_lr')
-    # args_opt.decay_steps = model_config_dict.get('lr_decay_iters')
-    # args_opt.epoch_size = model_config_dict.get('train_epoch_size')
-    args_opt.strategy_load_ckpt_path = model_config_dict.get('strategy_load_ckpt_path')
+    args_opt.decay_steps = model_config_dict.get('lr_decay_iters')
+    args_opt.epoch_size = model_config_dict.get('train_epoch_size')
+    # args_opt.strategy_load_ckpt_path = model_config_dict.get('strategy_load_ckpt_path')
     # args_opt.save_checkpoint_path = model_config_dict.get('save')
-    args_opt.load_ckpt_local_path = model_config_dict.get('load')
+    # args_opt.load_ckpt_local_path = model_config_dict.get('load')
     args_opt.data_url = model_config_dict.get('data_path')
-    args_opt.tokenizer_path = model_config_dict.get('vocab_file')
+    # args_opt.tokenizer_path = model_config_dict.get('vocab_file')
     args_opt.top_k = model_config_dict.get('top_k')
     args_opt.top_p = model_config_dict.get('top_p')
     args_opt.input = model_config_dict.get('input')
     args_opt.input_file = model_config_dict.get('input_file')
     args_opt.output_file = model_config_dict.get('output_file')
-    # args_opt.max_generate_length = model_config_dict.get('generate_max_tokens')
-    # print('========Mindir=============', model_config_dict.get('mindir_path'))
-    # args_opt.mindir_path = model_config_dict.get('mindir_path')
-
+    args_opt.max_generate_length = model_config_dict.get('generate_max_tokens')
+    # args_opt.save_checkpoint_path = model_config_dict.get('save_checkpoint_path')
+    # args_opt.load_ckpt_local_path = model_config_dict.get('load_ckpt_local_path')
     return args_opt
 
 
@@ -418,4 +371,4 @@ def extend_setup_args_for_mPangu(args_opt, model_config_dict):
     return args_opt
 
 
-# opt = get_args(True)
+opt = get_args(True)
