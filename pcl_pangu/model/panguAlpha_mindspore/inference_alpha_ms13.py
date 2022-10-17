@@ -92,6 +92,11 @@ def load_model(args_opt):
         else:
             context.set_auto_parallel_context()
 
+    context.set_context(
+        save_graphs=False,
+        save_graphs_path="/cache/graphs_of_device_id_" + str(rank),
+    )
+
     use_past = (args_opt.use_past == "true")
     print('local_rank:{}, start to run...'.format(rank), flush=True)
     if args_opt.export:
@@ -154,8 +159,8 @@ def load_model(args_opt):
         predict_layout = model_predict.infer_predict_layout(inputs_np, current_index, init_true, batch_valid_length)
         model_predict.predict_network.add_flags_recursive(is_first_iteration=False)
         _ = model_predict.infer_predict_layout(inputs_np_1, current_index, init_true, batch_valid_length)
-    else:
-        predict_layout = model_predict.infer_predict_layout(inputs_np, current_index)
+    # else:
+        # predict_layout = model_predict.infer_predict_layout(inputs_np, current_index)
 
     OneCKPTPath = get_openi_tar(args_opt.load_ckpt_local_path)
     if rank % 8 == 0:
