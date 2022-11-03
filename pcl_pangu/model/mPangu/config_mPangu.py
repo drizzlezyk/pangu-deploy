@@ -69,8 +69,7 @@ DEFAULT_CONFIG = {
     'eval_iters': 10,
     'fp16': True,
     'finetune': False,
-    'tokenizer_type': 'GPT2BPETokenizer',
-    'mindir_path':''
+    'tokenizer_type': 'GPT2BPETokenizer'
 }
 
 

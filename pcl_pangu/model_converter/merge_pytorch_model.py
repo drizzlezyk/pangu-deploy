@@ -36,6 +36,6 @@ def merge_pt(config, sharding_path, num_ranks):
 if __name__ == '__main__':
 
     merged_path = '/home/yands/tmp/numpy_ckpt_2.6b/2_partition_model'
-    merge_pt(alpha.model_config_gpu(model='2B6'), merged_path, 2)
+    merge_pt(alpha.model_config_gpu(model='2B6'),merged_path,2)
 
     pass

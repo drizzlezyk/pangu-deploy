@@ -1,7 +1,4 @@
-{
-  "model_algorithm": "pangu",
-  "model_type": "MindSpore",
-  "apis":  [
+[
     {
       "protocol": "https",
       "url": "/infer/text",
@@ -30,4 +27,3 @@
       }
     }
   ]
-}

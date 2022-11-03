@@ -1,4 +1,5 @@
 from pcl_pangu.model import alpha
+from pcl_pangu.context import set_context
 from pcl_pangu.model.launcher_torch import launch
 from loguru import logger
 import os, sys

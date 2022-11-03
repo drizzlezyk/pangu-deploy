@@ -73,6 +73,14 @@ DEFAULT_CONFIG = {
 }
 
 
+class model_config_cpu():
+    def __init__(self, model='350M',load=None):
+        self.model = model
+        self.load = load
+        self.batch_size = 1
+        self.model_config = MODEL_CONFIG[model]
+
+
 class model_config_gpu():
     def __init__(self, model='350M',
                  model_parallel_size=1,
@@ -150,34 +158,17 @@ class model_config_gpu():
 class model_config_npu():
     def __init__(self, model='350M',
                  model_parallel_size=1,
-                 batch_size=4,
+                 batch_size=8,
                  train_iters=50000,
                  start_lr=1.0e-5,
                  end_lr=1.0e-6,
                  data_path='data',
-                 tokenizer_path='',
+                 vocab_file=vocab_4w,
                  vocab_size=40000,
-                 load_ckpt_local_path=None,
+                 load=None,
                  save=None,
                  strategy_load_ckpt_path=None,
                  finetune=False,
-                 mindir_path='',
-                 device_target='Ascend',
-                 inputs='',
-                 output_file='',
-                 oneCardInference=True,
-                 distribute=True,
-                 use_past='false',
-                 export=0,
-                 op_level_model_parallel_num=1,
-                 seq_length=1024,
-                 num_layers=64,
-                 stage_num=1,
-                 micro_size=1,
-                 hidden_size=2560,
-                 param_init_type="fp32",
-                 load_ckpt_name="PanGu_Alpha.ckpt",
-                 ckpt_output_path=''
                  ):
         self.model = model
         self.model_parallel_size = model_parallel_size
@@ -186,43 +177,20 @@ class model_config_npu():
         self.lr_decay_iters = int(0.64 * self.train_iters)
         self.start_lr = start_lr
         self.end_lr = end_lr
-        self.load_ckpt_local_path = load_ckpt_local_path
+        self.load = load
         self.finetune = finetune
-        if load_ckpt_local_path is not None:
-            self.save = self.load_ckpt_local_path if save is None else save
+        if load is not None:
+            self.save = self.load if save is None else save
         else:
             self.save = save
         self.data_path = data_path
-        self.tokenizer_path = tokenizer_path
+        self.vocab_file = vocab_file
         self.vocab_size = vocab_size
         self.strategy_load_ckpt_path = strategy_load_ckpt_path
-        self.mindir_path = mindir_path
-        self.device_target = device_target
-        self.input = inputs
-        self.output_file = output_file
-        self.oneCardInference = oneCardInference
-        self.distribute = distribute
-        self.use_past = use_past
-        self.export = export
-        self.op_level_model_parallel_num = op_level_model_parallel_num
-        self.seq_length = seq_length
-        self.num_layers = num_layers
-        self.stage_num = stage_num
-        self.micro_size = micro_size
-        self.hidden_size = hidden_size
-        self.param_init_type = param_init_type
-        self.load_ckpt_name = load_ckpt_name
-        self.ckpt_output_path = ckpt_output_path
-        if self.model == "2B6":
-            self.num_layers = 31
-            self.hidden_size = 2560
-            self.num_attention_heads = 32
-            self.seq_length = 1024
-            self.max_position_embeddings = 1024
-            self.model_parallel_size = 2
         if self.finetune:
-            assert self.load_ckpt_local_path is not None, "> Please set your pretrained [model.ckpt] path!"
+            assert self.load is not None, "> Please set your pretrained [model.ckpt] path!"
             # assert self.strategy_load_ckpt_path is not None, "> Please set your pretrained model [strategy.ckpt] path!"
+
 
 
     def _cover_modelarts_training_args(self, oneCardInference=False):
@@ -237,15 +205,13 @@ class model_config_npu():
                 self.model_parallel_size = tmp_config['model_parallel_size']
         default_config = copy.deepcopy({**tmp_config, **DEFAULT_CONFIG})
         _vars = vars(self)
-        default_config['load_ckpt_local_path'] = self.load_ckpt_local_path
+        default_config['load'] = self.load
         default_config['save'] = self.save
         default_config['finetune'] = self.finetune
         default_config['data_path'] = self.data_path
-        default_config['tokenizer_path'] = self.tokenizer_path
+        default_config['vocab_file'] = self.vocab_file
         default_config['vocab_size'] = self.vocab_size
         default_config['lr_decay_iters'] = self.lr_decay_iters
-        default_config['mindir_path'] = self.mindir_path
-        default_config['device_target'] = self.device_target
         # _vars.pop('checkpoint_path')
         for k, v in _vars.items():
             default_config[k] = v

@@ -476,8 +476,7 @@ def add_retrain_params(opt):
                      help="Save checkpoint path.")
     opt.add_argument("--strategy_load_ckpt_path",
                      type=str,
-                     default='',
-                     # default="s3://research-my/Cloud_compute/model_strategy/strategy/PanGu-26b-m8d1-22m6d20_pd-cmrc-d8-strategy.ckpt",
+                     default="s3://research-my/Cloud_compute/model_strategy/strategy/PanGu-26b-m8d1-22m6d20_pd-cmrc-d8-strategy.ckpt",
                      help="The training prallel strategy for the model.")
     opt.add_argument("--keep_checkpoint_max",## 
                      type=int,
@@ -520,111 +519,103 @@ def add_retrain_params(opt):
                      default=0,##18,
                      help="datasets has been trained before. 0")
     
-#
-# def get_args(inference=False):
-#     """train function for PanguAlpha"""
-#     parser = argparse.ArgumentParser(description="PanguAlpha training")
-#     parser.add_argument('--device_id',
-#                         type=int,
-#                         default=0,
-#                         help="Device id, default is 0.")
-#     parser.add_argument("--device_num",
-#                         type=int,
-#                         default=8,
-#                         help="Use device nums, default is 128.")
-#     parser.add_argument("--distribute",
-#                         type=str,
-#                         default="true",
-#                         choices=["true", "false"],
-#                         help="Run distribute, default is true.")
-#     parser.add_argument('--data_url',
-#                         required=False,
-#                         default='obs://wiki-test/train_data/',
-#                         help='Location of data.')## obs://datasets/V2-Multi-langs-CC-21-378G-bpe-128k-jieba/train_simple_corpus/
-#     parser.add_argument('--multi_data_url',
-#                         help='path to multi dataset',
-#                         default=WorkEnvironment('train'))
-#     parser.add_argument('--train_url',
-#                         required=False,
-#                         default=None,
-#                         help='Location of training outputs.')
-#     parser.add_argument("--run_type",
-#                         type=str,
-#                         default="train",
-#                         choices=["train", "predict", "incremental_train", "pre_trained"],
-#                         help="The run type")
-#     parser.add_argument("--model",
-#                         type=str,
-#                         default="2B6",
-#                         choices=["200B", "13B", "2B6", "self_define"],
-#                         help="The scale of the model parameters")
-#     parser.add_argument("--device_target",
-#                         type=str,
-#                         default="Ascend",
-#                         choices=["Ascend", "GPU"],
-#                         help="The running device")
-#     parser.add_argument("--tokenizer_path",
-#                         type=str,
-#                         default="./tokenizer_path",
-#                         help="The path where stores vocab and vocab model file")
-#     parser.add_argument("--param_init_type",
-#                         type=str,
-#                         default="fp32",
-#                         help="The initialization type for parameters. Default fp32.")
-#     parser.add_argument("--offline",
-#                         type=int,
-#                         default=1,
-#                         help="Running on cloud of not. Default 1.")
-#     parser.add_argument("--export",
-#                         type=int,
-#                         default=0,
-#                         help="Whether export mindir for serving.")
-#     parser.add_argument("--load_ckpt_name",
-#                         type=str,
-#                         default='PanGu_Alpha.ckpt',
-#                         help="checkpint file name.")
-# #     filter_ckpt = 'exp09_GPT3_1-17500_2'
-# #     f's3://research-my/taoht-13b/filtered_ckpt/language_enzh/{filter_ckpt}/{filter_ckpt}'
-#     parser.add_argument("--load_ckpt_obs_path",
-#                         type=str,##s3://mindspore-file/huangxinjing/filtered_ckpt/Newexp69_GPT3_5-684_2/Newexp69_GPT3_5-684_2
-#                         default='obs://research-my/Cloud_compute/model_strategy/model/cmrc3-pd1-standalone/steps_24000/',
-#                         help="predict file path.")##
-#     parser.add_argument("--load_obs_ckptname",
-#                         type=str,
-#                         default='mPanGu53-26b-stage1-2_',
-#                         help="ckpt file name in obs.")##
-#     parser.add_argument("--load_ckpt_local_path",
-#                         type=str,
-#                         default='/cache/ckpt_file/',
-#                         help="incremental training or predict ckpt file path. Default None")
-#     parser.add_argument("--incremental_training",
-#                         type=int,
-#                         default=0,
-#                         help="Enable incremental training. Default 0.")
-#     parser.add_argument("--src_language",
-#                         type=str,
-#                         default="",
-#                         help="The language to translate")
-#     parser.add_argument("--tag_language",
-#                         type=str,
-#                         default="",
-#                         help="trans to tag language")
-#     parser.add_argument("--mindir_path",
-#                         type=str,
-#                         default="",
-#                         help="trans to tag language")
-#     parser.add_argument("--load_mindir_path",
-#                         type=str,
-#                         default="",
-#                         help="load mindir path")
-#
-#     add_training_params(parser)
-#     add_retrain_params(parser)
-#     if inference:
-#         add_inference_params(parser)
-#     args_opt = parser.parse_args()
-#
-#     return args_opt
+    
+def get_args(inference=False):
+    """train function for PanguAlpha"""
+    parser = argparse.ArgumentParser(description="PanguAlpha training")
+    parser.add_argument('--device_id',
+                        type=int,
+                        default=0,
+                        help="Device id, default is 0.")
+    parser.add_argument("--device_num",
+                        type=int,
+                        default=8,
+                        help="Use device nums, default is 128.")
+    parser.add_argument("--distribute",
+                        type=str,
+                        default="true",
+                        choices=["true", "false"],
+                        help="Run distribute, default is true.")
+    parser.add_argument('--data_url',
+                        required=False,
+                        default='obs://wiki-test/train_data/',
+                        help='Location of data.')## obs://datasets/V2-Multi-langs-CC-21-378G-bpe-128k-jieba/train_simple_corpus/
+    parser.add_argument('--multi_data_url',
+                        help='path to multi dataset',
+                        default=WorkEnvironment('train'))
+    parser.add_argument('--train_url',
+                        required=False,
+                        default=None,
+                        help='Location of training outputs.')
+    parser.add_argument("--run_type",
+                        type=str,
+                        default="train",
+                        choices=["train", "predict", "incremental_train", "pre_trained"],
+                        help="The run type")
+    parser.add_argument("--model",
+                        type=str,
+                        default="2B6",
+                        choices=["200B", "13B", "2B6", "self_define"],
+                        help="The scale of the model parameters")
+    parser.add_argument("--device_target",
+                        type=str,
+                        default="Ascend",
+                        choices=["Ascend", "GPU"],
+                        help="The running device")
+    parser.add_argument("--tokenizer_path",
+                        type=str,
+                        default="./tokenizer_path",
+                        help="The path where stores vocab and vocab model file")
+    parser.add_argument("--param_init_type",
+                        type=str,
+                        default="fp32",
+                        help="The initialization type for parameters. Default fp32.")
+    parser.add_argument("--offline",
+                        type=int,
+                        default=1,
+                        help="Running on cloud of not. Default 1.")
+    parser.add_argument("--export",
+                        type=int,
+                        default=0,
+                        help="Whether export mindir for serving.")
+    parser.add_argument("--load_ckpt_name",
+                        type=str,
+                        default='PanGu_Alpha.ckpt',
+                        help="checkpint file name.")
+#     filter_ckpt = 'exp09_GPT3_1-17500_2'
+#     f's3://research-my/taoht-13b/filtered_ckpt/language_enzh/{filter_ckpt}/{filter_ckpt}'
+    parser.add_argument("--load_ckpt_obs_path",
+                        type=str,##s3://mindspore-file/huangxinjing/filtered_ckpt/Newexp69_GPT3_5-684_2/Newexp69_GPT3_5-684_2
+                        default='obs://research-my/Cloud_compute/model_strategy/model/cmrc3-pd1-standalone/steps_24000/',
+                        help="predict file path.")## 
+    parser.add_argument("--load_obs_ckptname",
+                        type=str,
+                        default='mPanGu53-26b-stage1-2_',
+                        help="ckpt file name in obs.")## 
+    parser.add_argument("--load_ckpt_local_path",
+                        type=str,
+                        default='/cache/ckpt_file/',
+                        help="incremental training or predict ckpt file path. Default None")
+    parser.add_argument("--incremental_training",
+                        type=int,
+                        default=0,
+                        help="Enable incremental training. Default 0.")
+    parser.add_argument("--src_language",
+                        type=str,
+                        default="",
+                        help="The language to translate")
+    parser.add_argument("--tag_language",
+                        type=str,
+                        default="",
+                        help="trans to tag language")
+
+    add_training_params(parser)
+    add_retrain_params(parser)
+    if inference:
+        add_inference_params(parser)
+    args_opt = parser.parse_args()
+
+    return args_opt
 
 
 def download_data(src_data_url, tgt_data_path, rank):
@@ -695,22 +686,23 @@ def get_ckpt_file_list(ckpt_path, device_num):
     
     #path = os.listdir(ckpt_path)
     #print('Get path list:', path, flush=True)
-    
-    returned_list=[]
+
+    returned_list = []
     for i in range(0, device_num):
         returned_list.append('filerted_{}.ckpt'.format(i))
-    #filtered = [item for item in path if 'embedding' not in item]save_checkpoint_bucket_dir
+    # filtered = [item for item in path if 'embedding' not in item]save_checkpoint_bucket_dir
     print(returned_list)
-    print('ckpt_path', ckpt_path)
-    #filtered.sort(key = lambda x: int(x.split('.')[0].split('_')[1]))
+    print('====================ckpt_path==================', ckpt_path)
+    # filtered.sort(key = lambda x: int(x.split('.')[0].split('_')[1]))
     returned_list = [os.path.join(ckpt_path, item) for item in returned_list if 'embedding' not in item]
     print("=================Sorted list==============", returned_list)
     for item in returned_list:
         fsize = os.path.getsize(item)
-        f_gb = fsize/float(1024)/1024
-        print(item, " :{:.2f} MB".format(f_gb) )
+        f_gb = fsize / float(1024) / 1024
+        print(item, " :{:.2f} MB".format(f_gb))
     return returned_list
-        
+
+
 class CheckpointSaveCallback(Callback):
     def __init__(self, local_ckpt_dir, local_rank=0, has_trained_epoch=0, has_trained_step=0, 
                     bucket='obs://ckeckpoint_file/path/', syn_obs_steps=100):

@@ -1,0 +1,21 @@
+{
+  "auth":{
+    "identity":{
+      "methods": ["password"],
+      "password": {
+        "user": {
+          "name": "wuhanjisuan191",
+          "password": "986%#hwAA1",
+          "domain": {
+            "name": "wuhanjisuan191"
+          }
+        }
+      }
+    },
+    "scope":{
+      "project":{
+        "name":"cn-central-221"
+      }
+    }
+  }
+}

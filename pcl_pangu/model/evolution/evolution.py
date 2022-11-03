@@ -78,6 +78,44 @@ def inference(config,top_k=1,top_p=0.9,input=None,input_file=None,output_file=No
         script_args.append('--isEvolution=True')
         run_pt(script_args, py_script)
 
+    elif check_context() == 'cpu':
+        from pcl_pangu.onnx_inference.infer import onnx_generate
+        from pcl_pangu.tokenizer.tokenization_jieba import get_tokenizer
+
+        num_threads = 2
+        past_path = None
+        model_path = None
+        for filename in os.listdir(config.load):
+            if filename.endswith('.npy'):
+                past_path = os.path.join(config.load, filename)
+            if filename.endswith('.onnx'):
+                model_path = os.path.join(config.load, filename)
+
+        tokenizer = get_tokenizer()
+        if input is not None:
+            raw_text = input
+            output_samples = onnx_generate(raw_text,model_path,tokenizer,past_path,
+                                           topk=top_k,top_p=top_p,threads=num_threads,
+                                           max_len=generate_max_tokens)
+
+            print('Input is:', raw_text)
+            print('Output is:', output_samples[len(raw_text):], flush=True)
+            print()
+
+        if input_file is not None:
+            raw_texts = open(input_file, 'r').read().split('\n\n')
+            write_output = print
+            if output_file is not None:
+                output_file = open(output_file, 'w')
+                write_output = lambda x: output_file.write(x + '\n')
+            for raw_text in raw_texts:
+                output_samples = onnx_generate(raw_text,model_path,tokenizer,past_path,
+                                               topk=top_k,top_p=top_p,threads=num_threads,
+                                               max_len=generate_max_tokens)
+                write_output('Input is: ' + raw_text)
+                write_output('Output is: ' + output_samples[len(raw_text):])
+                write_output()
+
     else:
         print("ERROR: wrong backend.")
         return 1

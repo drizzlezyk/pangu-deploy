@@ -31,7 +31,6 @@ def txt2bin(input_glob, output_prefix, vocab_file="vocab_4w"):
 
     args.input = input_glob
     args.output_prefix = output_prefix
-    args.vocab_file = vocab_file
 
     print("Opening", args.input)
     file_iter = glob.iglob(args.input)
