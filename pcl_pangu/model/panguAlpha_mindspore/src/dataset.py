@@ -134,6 +134,7 @@ def create_dataset(batch_size, data_path, device_num=1, rank=0, drop=True, full_
     dataset = dataset.repeat(epoch)
     return dataset
 
+
 def create_dataset_aisyn(batch_size, data_path, device_num=1, rank=0, drop=True, full_batch=False, data_start_index=0,
                    eod_reset=False, eod_id=9, column_name='input_ids', epoch=1):
     """

@@ -82,6 +82,7 @@ def sampler(log_probs_revised, top_p, top_k, use_pynative=False):
         p = probs / sum(probs)
     return p, p_args
 
+
 def generate(model, origin_inputs, config):
     """
     Text generation
@@ -146,6 +147,7 @@ def generate(model, origin_inputs, config):
     length = np.sum(outputs != 0)
     outputs = outputs[0][:length]
     return outputs
+
 
 def generate_increment(model, origin_inputs, config):
     """

@@ -4,7 +4,7 @@
   "apis":  [
     {
       "protocol": "https",
-      "url": "/",
+      "url": "/infer/text",
       "method": "post",
       "request": {
         "Content-type": "application/json",

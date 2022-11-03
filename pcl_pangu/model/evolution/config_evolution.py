@@ -64,13 +64,6 @@ DEFAULT_CONFIG = {
     'tokenizer_type': 'GPT2BPETokenizer'
 }
 
-class model_config_cpu():
-    def __init__(self, model='350M',load=None):
-        self.model = model
-        self.load = load
-        self.batch_size = 1
-        self.model_config = MODEL_CONFIG[model]
-
 class model_config_gpu(object):
     def __init__(self, model='350M',
                  model_parallel_size=1,

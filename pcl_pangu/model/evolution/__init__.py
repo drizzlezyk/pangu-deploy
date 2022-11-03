@@ -5,4 +5,4 @@
 # @Author: 2022 PCL
 
 from .evolution import train, fine_tune, inference
-from .config_evolution import model_config_gpu, model_config_cpu
+from .config_evolution import model_config_gpu
