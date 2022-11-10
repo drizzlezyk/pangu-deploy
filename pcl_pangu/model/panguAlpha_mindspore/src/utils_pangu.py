@@ -332,7 +332,7 @@ def add_inference_params(opt):
                      help="Whether use pynative op for postproecess")
     opt.add_argument("--use_past",
                      type=str,
-                     default="true",
+                     default="false",
                      choices=["true", "false"],
                      help="Whether enable state reuse")
     opt.add_argument("--input",
@@ -533,7 +533,7 @@ def get_args(inference=False):
                         help="Use device nums, default is 128.")
     parser.add_argument("--distribute",
                         type=str,
-                        default="true",
+                        default="false",
                         choices=["true", "false"],
                         help="Run distribute, default is true.")
     parser.add_argument('--data_url',
@@ -564,7 +564,7 @@ def get_args(inference=False):
                         help="The running device")
     parser.add_argument("--tokenizer_path",
                         type=str,
-                        default="./tokenizer_path",
+                        default="/home/model/tokenizer/vocab",
                         help="The path where stores vocab and vocab model file")
     parser.add_argument("--param_init_type",
                         type=str,
@@ -594,7 +594,7 @@ def get_args(inference=False):
                         help="ckpt file name in obs.")## 
     parser.add_argument("--load_ckpt_local_path",
                         type=str,
-                        default='/cache/ckpt_file/',
+                        default='/home/model/one_ckpt/',
                         help="incremental training or predict ckpt file path. Default None")
     parser.add_argument("--incremental_training",
                         type=int,
@@ -613,7 +613,9 @@ def get_args(inference=False):
     add_retrain_params(parser)
     if inference:
         add_inference_params(parser)
-    args_opt = parser.parse_args()
+    # args_opt = parser.parse_args()
+    # args_opt = parser.parse_args(args=[])
+    args_opt, _ = parser.parse_known_args()
 
     return args_opt
 

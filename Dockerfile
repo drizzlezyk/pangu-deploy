@@ -17,7 +17,7 @@ ENV LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/lib64:/usr/local/Asc
     TOOLCHAIN_HOME=/usr/local/Ascend/ascend-toolkit/latest/toolkit \
     ASCEND_AUTOML_PATH=/usr/local/Ascend/ascend-toolkit/latest/tools
 
-RUN apt install -y libgmp-dev
+# RUN apt install -y libgmp-dev
 
 # 安装Mindspore
 USER work
@@ -44,8 +44,15 @@ RUN pip install loguru -i https://pypi.tuna.tsinghua.edu.cn/simple
 RUN pip uninstall urllib3 -y
 RUN pip uninstall requests -y
 
+RUN pip install multiprocess \
+		gevent \
+		gunicorn -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+
 # 拷贝应用服务代码进镜像里面
 COPY --chown=work:work model /home/model
 
 # 制定启动命令
-CMD python3 /home/model/service_deploys.py --tokenizer_path /home/model/okenizer/vocab  --load_ckpt_local_path /home/model/one_ckpt/ --distribute false --use_past false
+# CMD python3 /home/model/service_deploys.py --tokenizer_path /home/model/tokenizer/vocab  --load_ckpt_local_path /home/model/one_ckpt/ --distribute false --use_past false
+
+CMD gunicorn -w 1 -k gevent -b 0.0.0.0:8080 -t 1200 service_multi:APP
