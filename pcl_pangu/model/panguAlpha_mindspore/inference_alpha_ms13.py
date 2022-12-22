@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,15 +28,14 @@ from mindspore.parallel import set_algo_parameters
 from mindspore.parallel._cost_model_context import _set_multi_subgraphs
 from mindspore.train.model import Model
 from mindspore.train.serialization import load_checkpoint, load_param_into_net, load_distributed_checkpoint
-# from src.serialization import load_distributed_checkpoint
 from pcl_pangu.model.panguAlpha_mindspore.src.pangu_alpha import PanguAlpha, EvalNet
-from pcl_pangu.model.panguAlpha_mindspore.src.pangu_alpha_config import PANGUALPHAConfig, set_parse
+from pcl_pangu.model.panguAlpha_mindspore.src.pangu_alpha_config import PANGUALPHAConfig
 from pcl_pangu.model.panguAlpha_mindspore.src.utils_pangu import get_args
 
 import time
 from pcl_pangu.model.panguAlpha_mindspore.src.utils_pangu import get_openi_tar, ckpt_tar_openi, get_ckpt_file_list
 
-from mindspore.nn.wrap.cell_wrapper import PipelineCell, _VirtualDatasetCell
+from mindspore.nn.wrap.cell_wrapper import _VirtualDatasetCell
 
 
 def load_model(args_opt):
@@ -69,7 +68,6 @@ def load_model(args_opt):
                 loss_repeated_mean=True,
                 enable_parallel_optimizer=False,
                 strategy_ckpt_load_file=local_strategy_ckpt_path,
-                # pipeline_stages=args_opt.stage_num
             )
         else:
             context.set_auto_parallel_context(
@@ -104,8 +102,6 @@ def load_model(args_opt):
     # Set model property
     model_parallel_num = args_opt.op_level_model_parallel_num
     data_parallel_num = int(device_num / model_parallel_num)
-    # per_batch_size = args_opt.per_batch_size
-    # batch_size = per_batch_size * data_parallel_num
 
     # Now only support single batch_size for predict
     batch_size = 1
@@ -341,6 +337,7 @@ def main(opt):
             run_predict(model_predict, config, opt)
         else:
             run_predict_mpg(model_predict, config, opt)
+
 
 def setup_args(args_opt, model_config_dict):
     args_opt.op_level_model_parallel_num = model_config_dict.get('model_parallel_size')
