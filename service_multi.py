@@ -40,7 +40,10 @@ class MyThread(Thread):
         self.output = self.func(*self.args)
 
     def get_result(self):
-        return self.output   # 如果子线程不使用join方法，此处可能会报没有self.result的错误
+        try:
+            return self.output
+        except RuntimeError:
+            print('No output!')
 
 
 set_context(backend='mindspore')
